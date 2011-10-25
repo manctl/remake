@@ -57,8 +57,19 @@ macro(expand_sources target)
             append(${target}_SOURCES
                 ${unit}-fx.cpp
                 ${unit}-fx.h
-                ${unit}-fx.lua
             )
+            set(UNIT_SUFFIXES
+                -fx.lua
+                -fx-sys.lua
+                -fx-ctl.lua
+                -fx-gui.lua
+                -fx-gfx.lua
+            )
+            foreach(suffix ${UNIT_SUFFIXES})
+                if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${unit}${suffix}")
+                    append(${target}_SOURCES ${unit}${suffix})
+                endif()
+            endforeach()
         endforeach()
     endif()
     if(${target}_CORE_QT_UNITS)
