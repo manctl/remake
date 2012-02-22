@@ -103,6 +103,11 @@ macro(expand_sources target)
         QT4_WRAP_UI(${target}_UIC_SOURCES ${${target}_UIC})
         append(${target}_SOURCES ${${target}_UIC_SOURCES})
     endif()
+    if(${target}_WIN32_RC)
+        if(WIN32 AND ${target}_WIN32_RC)
+            append(${target}_SOURCES ${${target}_WIN32_RC})
+        endif()
+    endif()
 endmacro()
 
 macro(get_source_language src var)
@@ -157,22 +162,20 @@ macro(link target)
     endif()
 endmacro()
 
-macro(build_application target)
+macro(build_executable target) # ...
     expand_sources(${target})
-    add_executable(${target} MACOSX_BUNDLE
+    add_executable(${target} ${ARGN}
         ${${target}_SOURCES}
     )
     tag_sources(${target})
     link(${target})
 endmacro()
 
-macro(build_executable target)
-    expand_sources(${target})
-    add_executable(${target}
-        ${${target}_SOURCES}
-    )
-    tag_sources(${target})
-    link(${target})
+macro(build_application target) # ...
+    # FIXME: Add WIN32 & proper dispatch dispatch between:
+    #   * Qt's WinMain for Qt applications,
+    #   * and /ENTRY:mainCRTStartup linker flag for non-qt applications.
+    build_executable(${target} MACOSX_BUNDLE ${ARGN})
 endmacro()
 
 macro(build_static_library target)
