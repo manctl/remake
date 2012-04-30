@@ -178,6 +178,15 @@ macro(build_application target) # ...
     build_executable(${target} MACOSX_BUNDLE ${ARGN})
 endmacro()
 
+macro(build_module target)
+    expand_sources(${target})
+    add_library(${target} MODULE
+        ${${target}_SOURCES}
+    )
+    tag_sources(${target})
+    link(${target})
+endmacro()
+
 macro(build_static_library target)
     expand_sources(${target})
     add_library(${target} STATIC
