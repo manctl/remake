@@ -9,7 +9,10 @@ elseif(UNIX)
     endif()
 endif()
 
+# Beautify IDE projects.
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+# Put sources in folders.
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
     macro(folderify_sources src0) # ...
         foreach(src ${src0} ${ARGN})
@@ -190,6 +193,7 @@ macro(build_executable target) # ...
     )
     tag_sources(${target})
     link(${target})
+    set_property(TARGET ${target} PROPERTY FOLDER "exes")
 endmacro()
 
 macro(build_application target) # ...
@@ -197,6 +201,7 @@ macro(build_application target) # ...
     #   * Qt's WinMain for Qt applications,
     #   * and /ENTRY:mainCRTStartup linker flag for non-qt applications.
     build_executable(${target} MACOSX_BUNDLE ${ARGN})
+    set_property(TARGET ${target} PROPERTY FOLDER "apps")
 endmacro()
 
 macro(build_module target)
@@ -206,6 +211,7 @@ macro(build_module target)
     )
     tag_sources(${target})
     link(${target})
+    set_property(TARGET ${target} PROPERTY FOLDER "mods")
 endmacro()
 
 macro(build_static_library target)
@@ -215,4 +221,5 @@ macro(build_static_library target)
     )
     tag_sources(${target})
     link(${target})
+    set_property(TARGET ${target} PROPERTY FOLDER "libs")
 endmacro()
