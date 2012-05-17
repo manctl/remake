@@ -61,7 +61,7 @@ macro(target target_)
     include_directories(${HERE_BIN} ${HERE})
 endmacro()
 
-macro(expand_sources target)
+macro(pre_target target)
     if(${target}_UNITS)
         foreach(unit ${${target}_UNITS})
             append(${target}_SOURCES
@@ -152,7 +152,7 @@ macro(get_source_language src var)
     endif()
 endmacro()
 
-macro(tag_sources target)
+macro(post_target target)
     if(${target}_STRICT)
         foreach(src ${${target}_SOURCES})
             get_source_language(${src} src_lang)
@@ -162,6 +162,9 @@ macro(tag_sources target)
                 set_property(SOURCE ${src} APPEND PROPERTY COMPILE_FLAGS ${CBUILD_STRICT_CXX_FLAGS})
             endif()
         endforeach()
+    endif()
+    if(${target}_FILENAME)
+        set_property(TARGET ${target} PROPERTY OUTPUT_NAME ${${target}_FILENAME})
     endif()
 endmacro()
 
@@ -195,11 +198,11 @@ macro(link target)
 endmacro()
 
 macro(build_executable target) # ...
-    expand_sources(${target})
+    pre_target(${target})
     add_executable(${target} ${ARGN}
         ${${target}_SOURCES}
     )
-    tag_sources(${target})
+    post_target(${target})
     link(${target})
     set_property(TARGET ${target} PROPERTY FOLDER "exes")
 endmacro()
@@ -213,21 +216,21 @@ macro(build_application target) # ...
 endmacro()
 
 macro(build_module target)
-    expand_sources(${target})
+    pre_target(${target})
     add_library(${target} MODULE
         ${${target}_SOURCES}
     )
-    tag_sources(${target})
+    post_target(${target})
     link(${target})
     set_property(TARGET ${target} PROPERTY FOLDER "mods")
 endmacro()
 
 macro(build_static_library target)
-    expand_sources(${target})
+    pre_target(${target})
     add_library(${target} STATIC
         ${${target}_SOURCES}
     )
-    tag_sources(${target})
+    post_target(${target})
     link(${target})
     set_property(TARGET ${target} PROPERTY FOLDER "libs")
 endmacro()
