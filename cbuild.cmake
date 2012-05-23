@@ -215,14 +215,24 @@ macro(build_application target) # ...
     set_property(TARGET ${target} PROPERTY FOLDER "apps")
 endmacro()
 
-macro(build_module target)
+macro(build_module target) # ...
     pre_target(${target})
-    add_library(${target} MODULE
+    add_library(${target} MODULE ${ARGN}
         ${${target}_SOURCES}
     )
     post_target(${target})
     link(${target})
     set_property(TARGET ${target} PROPERTY FOLDER "mods")
+endmacro()
+
+macro(build_server target)
+    pre_target(${target})
+    add_executable(${target} ${ARGN}
+        ${${target}_SOURCES}
+    )
+    post_target(${target})
+    link(${target})
+    set_property(TARGET ${target} PROPERTY FOLDER "webs")
 endmacro()
 
 macro(build_static_library target)
