@@ -1,3 +1,26 @@
+macro(append l first) # ...
+    list(APPEND ${l} ${first} ${ARGN})
+endmacro()
+
+macro(subdirs firstDir) # ...
+    foreach(dir ${firstDir} ${ARGN})
+        add_subdirectory(${dir})
+    endforeach()
+endmacro()
+
+macro(debug_var var)
+    message("${var}=${${var}}")
+endmacro()
+
+macro(configure_inline name code)
+# FIXME: Strangely, @VAR@-style expression have already been substituted here.
+# Find out what's going on.
+    string(REGEX REPLACE "%{([-A-Za-z_0-9]+)}" "\${\\1}" escaped_code "${code}")
+#    string(CONFIGURE "${escaped_code}" configured_code @ONLY)
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${name}.cmake "${escaped_code}")
+    include(${CMAKE_CURRENT_BINARY_DIR}/${name}.cmake)
+endmacro()
+
 # Simplify the cross-platform model.
 if(WIN32)
     set(WINDOWS TRUE)
@@ -43,16 +66,6 @@ endif()
 if(APPLE OR CMAKE_COMPILER_IS_GNUCXX)
     set(CBUILD_STRICT_CXX_FLAGS "-Wall -Wextra -Werror -ansi -std=c++98 -pedantic -Wno-variadic-macros -Wno-long-long")
 endif()
-
-macro(append l first) # ...
-    list(APPEND ${l} ${first} ${ARGN})
-endmacro()
-
-macro(subdirs firstDir) # ...
-    foreach(dir ${firstDir} ${ARGN})
-        add_subdirectory(${dir})
-    endforeach()
-endmacro()
 
 macro(target target_)
     project(${target_})
@@ -166,6 +179,13 @@ macro(post_target target)
     if(${target}_FILENAME)
         set_property(TARGET ${target} PROPERTY OUTPUT_NAME ${${target}_FILENAME})
     endif()
+    foreach(dep ${${target}_DEPS})
+        if(NOT ${dep}_DEP)
+            message(SEND_ERROR "Missing dependency: ${dep}")
+        endif()
+        set(TARGET ${target})
+        configure_inline(${target}-${dep}-dep ${${dep}_DEP})
+    endforeach()
 endmacro()
 
 macro(link_platforms target first_platform) # ...
@@ -267,3 +287,7 @@ macro(end_workspace)
     set_property(TARGET workspace PROPERTY EXCLUDE_FROM_ALL TRUE)
     set_property(TARGET workspace PROPERTY FOLDER "[CBUILD]")
 endmacro()
+
+get_filename_component(HERE ${CMAKE_CURRENT_LIST_FILE} PATH)
+
+include(${HERE}/deps.cmake)
