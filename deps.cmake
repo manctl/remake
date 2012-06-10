@@ -1,7 +1,14 @@
-set(opengl_DEP "
-    find_package(OpenGL REQUIRED)
-    target_link_libraries(@TARGET@ %{OPENGL_LIBRARIES})
-")
+macro(package_dep name package libs_var)
+    set(${name}_DEP "
+        find_package(${package} REQUIRED)
+        target_link_libraries(@TARGET@ %{${libs_var}})
+    ")
+endmacro()
+
+package_dep(opengl OpenGL OPENGL_LIBRARIES)
+package_dep(glut   GLUT   GLUT_LIBRARIES  )
+
+#-------------------------------------------------------------------------------
 
 macro(qt_dep name component)
     set(qt-${name}_DEP "
