@@ -86,18 +86,10 @@ macro(target target_)
     include_directories(${HERE_BIN} ${HERE})
 endmacro()
 
-macro(filename_safe var path)
-    string(REPLACE "/" "-" "${var}" "${path}")
-endmacro()
-
-macro(get_lux_h var source)
-    dirname(source_dir "${source}")
-    filename_safe(path_name "${source_dir}")
-    if(path_name)
-        set(${var} "${CMAKE_CURRENT_BINARY_DIR}/lux-${path_name}-${source}")
-    else()
-        set(${var} "${CMAKE_CURRENT_BINARY_DIR}/lux-${source}")
-    endif()
+macro(get_lux_output var input)
+    string(REPLACE ".lux" "" output ${input})
+    set(${var} "${CMAKE_CURRENT_BINARY_DIR}/${output}")
+    message("${input} => ${output} (${${var}})")
 endmacro()
 
 macro(pre_target target)
@@ -140,13 +132,20 @@ macro(pre_target target)
     endif()
     if(${target}_LUX_UNITS)
         foreach(unit ${${target}_LUX_UNITS})
-            append(${target}_LUX ${unit}.h)
-            get_lux_h(lux_h ${unit}.h)
-            append(${target}_MOC ${lux_h})
+            get_lux_output(output_h   ${unit}.lux.h)
+            get_lux_output(output_cpp ${unit}.lux.cpp)
+            append(${target}_LUX
+                ${unit}.lux.h
+                ${unit}.lux.cpp
+            )
+            append(${target}_MOC ${output_h})
             append(${target}_SOURCES
-                ${unit}.h
-                ${unit}.cpp
-                ${lux_h}
+                ${output_h}
+                ${output_cpp}
+            )
+            append(${target}_FILES
+                ${unit}.lux.h
+                ${unit}.lux.cpp
             )
         endforeach()
     endif()
@@ -171,8 +170,9 @@ macro(pre_target target)
     endif()
     if(${target}_LUX)
         foreach(lux ${${target}_LUX})
-            get_lux_h(lux_h ${lux})
-            lux(${lux} ${lux_h})
+            get_lux_output(lux_output ${lux})
+            lux(${lux} ${lux_output})
+            message("LUX: ${lux} -> ${lux_output}")
         endforeach()
     endif()
     if(${target}_MOC)
