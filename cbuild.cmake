@@ -68,11 +68,11 @@ else()
 endif()
 
 if(APPLE OR CMAKE_COMPILER_IS_GNUC)
-    set(CBUILD_STRICT_C_FLAGS   "-Wall -Wextra -Werror -ansi -std=c99   -pedantic -Wno-variadic-macros -Wno-long-long")
+    set(CBUILD_STRICT_C_FLAGS   "-Wall -Wextra -Werror -ansi -std=c99   -pedantic -Wno-variadic-macros -Wno-long-long -Wno-unknown-pragmas")
 endif()
 
 if(APPLE OR CMAKE_COMPILER_IS_GNUCXX)
-    set(CBUILD_STRICT_CXX_FLAGS "-Wall -Wextra -Werror -ansi -std=c++98 -pedantic -Wno-variadic-macros -Wno-long-long")
+    set(CBUILD_STRICT_CXX_FLAGS "-Wall -Wextra -Werror -ansi -std=c++98 -pedantic -Wno-variadic-macros -Wno-long-long -Wno-unknown-pragmas")
 endif()
 
 macro(dirname var path)
