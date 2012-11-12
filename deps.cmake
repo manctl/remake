@@ -14,26 +14,29 @@ endfunction()
 
 function(register_library_dep lib)
     register_dep(${lib} "
-        include_directories(${CMAKE_CURRENT_LIST_DIR})
-        target_link_libraries(@TARGET@ ${lib})
-    ")
+include_directories(
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
+target_link_libraries(@TARGET@ ${lib})
+")
 endfunction()
 
 function(register_package_dep name package libs_var)
     register_dep(${name} "
-        find_package(${package} REQUIRED)
-        target_link_libraries(@TARGET@ %{${libs_var}})
-    ")
+find_package(${package} REQUIRED)
+target_link_libraries(@TARGET@ %{${libs_var}})
+")
 endfunction()
 
 #-------------------------------------------------------------------------------
 
 function(register_qt_dep name component)
     register_dep(qt-${name} "
-        find_package(Qt4 COMPONENTS ${component} REQUIRED)
-        include(%{QT_USE_FILE})
-        target_link_libraries(@TARGET@ %{QT_LIBRARIES})
-    ")
+find_package(Qt4 COMPONENTS ${component} REQUIRED)
+include(%{QT_USE_FILE})
+target_link_libraries(@TARGET@ %{QT_LIBRARIES})
+")
 endfunction()
 
 register_qt_dep(core         QtCore       )
@@ -61,14 +64,14 @@ register_qt_dep(ax-server    QAxServer    )
 register_qt_dep(dbus         QtDBus       )
 
 register_dep(qt-qml-debug "
-    find_package(Qt4 COMPONENTS QtDeclarative REQUIRED)
-    include(%{QT_USE_FILE})
-    if(QT_VERSION VERSION_LESS \"4.8.0\")
-        include_directories(%{QT_BINARY_DIR}/../qtc-qmldbg/include)
-    endif()
-    foreach(config DEBUG RELWITHDEBINFO)
-        set_property(TARGET @TARGET@ APPEND PROPERTY COMPILE_DEFINITIONS_%{config} QT_DECLARATIVE_DEBUG)
-    endforeach()
+find_package(Qt4 COMPONENTS QtDeclarative REQUIRED)
+include(%{QT_USE_FILE})
+if(QT_VERSION VERSION_LESS \"4.8.0\")
+    include_directories(%{QT_BINARY_DIR}/../qtc-qmldbg/include)
+endif()
+foreach(config DEBUG RELWITHDEBINFO)
+    set_property(TARGET @TARGET@ APPEND PROPERTY COMPILE_DEFINITIONS_%{config} QT_DECLARATIVE_DEBUG)
+endforeach()
 ")
 
 #-------------------------------------------------------------------------------
