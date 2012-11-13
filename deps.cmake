@@ -63,6 +63,12 @@ register_qt_dep(ax-container QAxContainer )
 register_qt_dep(ax-server    QAxServer    )
 register_qt_dep(dbus         QtDBus       )
 
+register_dep(qt-main-library "
+    find_package(Qt4 COMPONENTS QtCore REQUIRED)
+    include (%{QT_USE_FILE})
+    target_link_libraries(@TARGET@ %{QT_QTMAIN_LIBRARY})
+")
+
 register_dep(qt-qml-debug "
 find_package(Qt4 COMPONENTS QtDeclarative REQUIRED)
 include(%{QT_USE_FILE})
