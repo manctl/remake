@@ -329,6 +329,9 @@ macro(end_workspace)
     set_property(TARGET workspace PROPERTY FOLDER "[CBUILD]")
 endmacro()
 
-get_filename_component(HERE ${CMAKE_CURRENT_LIST_FILE} PATH)
+macro(include_here path) # paths
+    get_filename_component(HERE ${CMAKE_CURRENT_LIST_FILE} PATH)
+    include(${HERE}/${path})
+endmacro()
 
-include(${HERE}/deps.cmake)
+include_here(deps.cmake)
