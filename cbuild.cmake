@@ -29,20 +29,30 @@ macro(get_global var)
     get_property(${var} GLOBAL PROPERTY ${var})
 endmacro()
 
+macro(append_global var first) # second ... last
+    get_global(${var})
+    list(APPEND ${var} ${first} ${ARGN})
+    set_global(${var} ${${var}})
+endmacro()
+
 # Simplify the cross-platform model.
 if(WIN32)
     set(WINDOWS TRUE)
+    append_global(PLATFORM_DEFS "SYS_WINDOWS")
 elseif(UNIX)
+    append_global(PLATFORM_DEFS "SYS_UNIX")
     if(APPLE)
         set(MACOSX TRUE)
+        append_global(PLATFORM_DEFS "SYS_MACOSX")
     else()
         set(LINUX TRUE)
+        append_global(PLATFORM_DEFS "SYS_LINUX")
     endif()
 endif()
 
 # Beautify IDE projects.
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "[CMAKE]")
+set_global(USE_FOLDERS ON)
+set_global(PREDEFINED_TARGETS_FOLDER "[CMAKE]")
 
 # Put sources in folders.
 if(CMAKE_GENERATOR MATCHES "Visual Studio")
@@ -226,6 +236,10 @@ macro(post_target target)
     foreach(dep ${${target}_DEPS})
         run_dep(${target} ${dep})
     endforeach()
+    if(${target}_PLATFORM_DEFS)
+        get_global(${PLATFORM_DEFS})
+        set_property(TARGET ${target} PROPERTY COMPILE_DEFINITIONS ${PLATFORM_DEFS})
+    endif()
 endmacro()
 
 macro(link_platforms target first_platform) # ...
