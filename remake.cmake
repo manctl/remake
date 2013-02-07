@@ -273,12 +273,24 @@ macro(build_executable target) # ...
     set_property(TARGET ${target} PROPERTY FOLDER "exes")
 endmacro()
 
-macro(build_application target) # ...
-    # FIXME: Add WIN32 & proper dispatch dispatch between:
-    #   * Qt's WinMain for Qt applications,
-    #   * and /ENTRY:mainCRTStartup linker flag for non-qt applications.
-    build_executable(${target} MACOSX_BUNDLE ${ARGN})
-    set_property(TARGET ${target} PROPERTY FOLDER "apps")
+macro(build_static_library target)
+    pre_target(${target})
+    add_library(${target} STATIC
+        ${${target}_SOURCES}
+    )
+    post_target(${target})
+    link(${target})
+    set_property(TARGET ${target} PROPERTY FOLDER "libs")
+endmacro()
+
+macro(build_shared_library target)
+    pre_target(${target})
+    add_library(${target} SHARED
+        ${${target}_SOURCES}
+    )
+    post_target(${target})
+    link(${target})
+    set_property(TARGET ${target} PROPERTY FOLDER "dlls")
 endmacro()
 
 macro(build_module target) # ...
@@ -291,6 +303,14 @@ macro(build_module target) # ...
     set_property(TARGET ${target} PROPERTY FOLDER "mods")
 endmacro()
 
+macro(build_application target) # ...
+    # FIXME: Add WIN32 & proper dispatch dispatch between:
+    #   * Qt's WinMain for Qt applications,
+    #   * and /ENTRY:mainCRTStartup linker flag for non-qt applications.
+    build_executable(${target} MACOSX_BUNDLE ${ARGN})
+    set_property(TARGET ${target} PROPERTY FOLDER "apps")
+endmacro()
+
 macro(build_server target)
     pre_target(${target})
     add_executable(${target} ${ARGN}
@@ -299,17 +319,6 @@ macro(build_server target)
     post_target(${target})
     link(${target})
     set_property(TARGET ${target} PROPERTY FOLDER "webs")
-endmacro()
-
-macro(build_static_library target)
-    pre_target(${target})
-    add_library(${target} STATIC
-        ${${target}_SOURCES}
-    )
-    post_target(${target})
-    link(${target})
-    set_property(TARGET ${target} PROPERTY FOLDER "libs")
-    register_library_dep(${target})
 endmacro()
 
 include_here(deps.cmake)
