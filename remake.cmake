@@ -20,6 +20,10 @@ macro(get_global var)
     get_property(${var} GLOBAL PROPERTY ${var})
 endmacro()
 
+macro(set_internal var val)
+    set(${var} ${val} CACHE INTERNAL "")
+endmacro()
+
 macro(append_global var first) # second ... last
     get_global(${var})
     list(APPEND ${var} ${first} ${ARGN})
