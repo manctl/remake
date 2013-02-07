@@ -45,17 +45,27 @@ endmacro()
 
 # Simplify the cross-platform model.
 if(WIN32)
-    set(WINDOWS TRUE)
+    set_internal(WINDOWS TRUE)
     append_global(PLATFORM_DEFS "SYS_WINDOWS")
 elseif(UNIX)
+    set_internal(UNIX TRUE)
     append_global(PLATFORM_DEFS "SYS_UNIX")
     if(APPLE)
-        set(MACOSX TRUE)
+        set_internal(MACOSX TRUE)
         append_global(PLATFORM_DEFS "SYS_MACOSX")
     else()
-        set(LINUX TRUE)
+        set_internal(LINUX TRUE)
         append_global(PLATFORM_DEFS "SYS_LINUX")
     endif()
+endif()
+
+set_global(PLATFORMS "WINDOWS;MACOSX;LINUX;UNIX")
+
+# Simplify the target cpu word length problem.
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(M64 ON)
+else()
+    set(M32 ON)
 endif()
 
 # Beautify IDE projects.
@@ -123,12 +133,22 @@ macro(register_target_files target KIND kind)
     )
 endmacro(register_target_files)
 
+macro(platform_specific_sources target platform0) # ...
+    foreach(platform ${platform0} ${ARGN})
+        if(${platform} AND ${target}_${platform}_SOURCES)
+            append(${target}_SOURCES ${${target}_${platform}_SOURCES})
+        endif()
+    endforeach()
+endmacro()
+
 include_here(mods.cmake)
 
 macro(pre_target target)
 
     mods_pre_target(${target})
 
+    get_global(PLATFORMS)
+    platform_specific_sources(${target} ${PLATFORMS})
     if(${target}_UNITS)
         foreach(unit ${${target}_UNITS})
             append(${target}_SOURCES
@@ -204,21 +224,17 @@ macro(post_target target)
     endif()
 endmacro()
 
-macro(link_platforms target first_platform) # ...
-    foreach(platform ${first_platform} ${ARGN})
-        if(${platform} AND ${target}_LIBS_${platform})
-            target_link_libraries(${target} ${${target}_LIBS_${platform}})
+macro(link_platforms target platform0) # ...
+    foreach(platform ${platform0} ${ARGN})
+        if(${platform} AND ${target}_${platform}_LIBS)
+            target_link_libraries(${target} ${${target}_${platform}_LIBS})
         endif()
     endforeach()
 endmacro()
 
 macro(link target)
-    link_platforms(${target}
-        WINDOWS
-        MACOSX
-        LINUX
-        UNIX
-    )
+    get_global(PLATFORMS)
+    link_platforms(${target} ${PLATFORMS})
 
     if(${target}_LIBS)
         target_link_libraries(${target} ${${target}_LIBS})
