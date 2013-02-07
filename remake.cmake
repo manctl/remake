@@ -93,6 +93,10 @@ macro(dirname var path)
     get_filename_component(${var} ${path} PATH)
 endmacro()
 
+macro(add_compile_flags flag0) # ...
+    set_property(DIRECTORY APPEND PROPERTY COMPILE_FLAGS ${flag0} ${ARGN})
+endmacro()
+
 macro(target target_)
     project(${target_})
     set(HERE_BIN ${CMAKE_CURRENT_BINARY_DIR})
