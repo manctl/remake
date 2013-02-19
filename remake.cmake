@@ -1,3 +1,6 @@
+# Trigger C & C++ compiler detection if necessary.
+project(remake)
+
 macro(append l first) # ...
     list(APPEND ${l} ${first} ${ARGN})
 endmacro()
@@ -50,9 +53,9 @@ set_global(PLATFORMS "WINDOWS;MACOSX;LINUX;UNIX")
 
 # Simplify the target cpu word length problem.
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set(M64 ON)
+    set_internal(M64 ON)
 else()
-    set(M32 ON)
+    set_internal(M32 ON)
 endif()
 
 # Beautify IDE projects.
