@@ -409,8 +409,7 @@ macro(end_workspace)
 endmacro()
 
 macro(include_here path) # paths
-    get_filename_component(HERE ${CMAKE_CURRENT_LIST_FILE} PATH)
-    include(${HERE}/${path})
+    include(${CMAKE_CURRENT_LIST_DIR}/${path})
 endmacro()
 
 include_here(deps.cmake)
