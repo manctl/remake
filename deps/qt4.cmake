@@ -19,9 +19,9 @@ macro(register_qt4_only_alias alias dep)
 endmacro()
 
 register_dep(qt4-main-library "
-    find_package(Qt4 COMPONENTS QtCore REQUIRED)
-    include (%{QT_USE_FILE})
-    target_link_libraries(@TARGET@ %{QT_QTMAIN_LIBRARY})
+find_package(Qt4 COMPONENTS QtCore REQUIRED)
+include (%{QT_USE_FILE})
+target_link_libraries(@TARGET@ %{QT_QTMAIN_LIBRARY})
 ")
 
 register_dep(qt4-qml-debug "

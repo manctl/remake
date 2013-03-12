@@ -1,0 +1,5 @@
+macro(get_lux_output var input)
+    string(REPLACE ".lux" "" output ${input})
+    set(${var} "${CMAKE_CURRENT_BINARY_DIR}/${output}")
+    # message("${input} => ${output} (${${var}})")
+endmacro()

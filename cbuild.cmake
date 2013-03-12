@@ -12,6 +12,10 @@ macro(debug_var var)
     message("${var}=${${var}}")
 endmacro()
 
+macro(include_here path) # paths
+    include(${CMAKE_CURRENT_LIST_DIR}/${path})
+endmacro()
+
 macro(configure_inline name code)
 # FIXME: Strangely, @VAR@-style expression have already been substituted here.
 # Find out what's going on.
@@ -96,12 +100,6 @@ macro(target target_)
     include_directories(${HERE_BIN} ${HERE})
 endmacro()
 
-macro(get_lux_output var input)
-    string(REPLACE ".lux" "" output ${input})
-    set(${var} "${CMAKE_CURRENT_BINARY_DIR}/${output}")
-    # message("${input} => ${output} (${${var}})")
-endmacro()
-
 macro(register_target_files target KIND kind)
     set(${kind}_files_h ${CMAKE_CURRENT_BINARY_DIR}/${target}-${kind}-files.h)
     dir2code(${${kind}_files_h} ${${target}_${KIND}})
@@ -117,20 +115,12 @@ macro(register_target_files target KIND kind)
     )
 endmacro(register_target_files)
 
-macro(target_add_qrc target qrc name) # file ...
-    set(qrc_cpp ${CMAKE_CURRENT_BINARY_DIR}/${name}-qrc.cpp)
-    add_custom_command(OUTPUT ${qrc_cpp}
-        COMMAND ${QT_RCC_EXECUTABLE}
-        ARGS -name ${name} -o ${qrc_cpp} ${qrc}
-        MAIN_DEPENDENCY ${qrc}
-        DEPENDS ${ARGN}
-        VERBATIM
-    )
-    append(${target}_SOURCES   ${qrc_cpp})
-    append(${target}_GENERATED ${qrc_cpp})
-endmacro()
+include_here(mods.cmake)
 
 macro(pre_target target)
+
+    mods_pre_target(${target})
+
     if(${target}_UNITS)
         foreach(unit ${${target}_UNITS})
             append(${target}_SOURCES
@@ -147,122 +137,6 @@ macro(pre_target target)
                 ${unit}.hpp
             )
         endforeach()
-    endif()
-    if(${target}_FX_UNITS)
-        foreach(unit ${${target}_FX_UNITS})
-            append(${target}_SOURCES
-                ${unit}-fx.cpp
-                ${unit}-fx.h
-            )
-            set(UNIT_SUFFIXES
-                -fx.lua
-                -fx-sys.lua
-                -fx-ctl.lua
-                -fx-gui.lua
-                -fx-gfx.lua
-            )
-            foreach(suffix ${UNIT_SUFFIXES})
-                if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${unit}${suffix}")
-                    append(${target}_SOURCES ${unit}${suffix})
-                endif()
-            endforeach()
-        endforeach()
-    endif()
-    if(${target}_LUX_UNITS)
-        foreach(unit ${${target}_LUX_UNITS})
-            get_lux_output(output_h   ${unit}.lux.h)
-            get_lux_output(output_cpp ${unit}.lux.cpp)
-            append(${target}_LUX
-                ${unit}.lux.h
-                ${unit}.lux.cpp
-            )
-            append(${target}_MOC ${output_h})
-            append(${target}_SOURCES
-                ${output_h}
-                ${output_cpp}
-            )
-            append(${target}_FILES
-                ${unit}.lux.h
-                ${unit}.lux.cpp
-            )
-        endforeach()
-    endif()
-    if(${target}_MOC_UNITS)
-        foreach(unit ${${target}_MOC_UNITS})
-            append(${target}_MOC ${unit}.h)
-            append(${target}_SOURCES
-                ${unit}.cpp
-                ${unit}.h
-            )
-        endforeach()
-    endif()
-    if(${target}_UIC_UNITS)
-        foreach(unit ${${target}_UIC_UNITS})
-            append(${target}_UIC ${unit}.ui)
-            append(${target}_MOC ${unit}.h)
-            append(${target}_SOURCES
-                ${unit}.cpp
-                ${unit}.h
-            )
-        endforeach()
-    endif()
-    if(${target}_LUX)
-        foreach(lux ${${target}_LUX})
-            get_lux_output(lux_output ${lux})
-            lux(${lux} ${lux_output})
-            append(${target}_GENERATED ${lux_output})
-            # message("LUX: ${lux} -> ${lux_output}")
-        endforeach()
-    endif()
-    if(${target}_MOC)
-        if(QT5)
-            qt5_wrap_cpp(${target}_MOC_SOURCES ${${target}_MOC})
-        else()
-            qt4_wrap_cpp(${target}_MOC_SOURCES ${${target}_MOC})
-        endif()
-        append(${target}_SOURCES ${${target}_MOC_SOURCES})
-    endif()
-    if(${target}_JS)
-        set(js_qrc ${CMAKE_CURRENT_BINARY_DIR}/${target}-js.qrc)
-        dir2code(${js_qrc} ${${target}_JS})
-        target_add_qrc(${target} ${js_qrc} ${target}-js ${${target}_JS})
-        append(${target}_GENERATED ${js_qrc})
-        append(${target}_FILES ${${target}_JS})
-        register_target_files(${target} JS js)
-    endif()
-    if(${target}_QML)
-        set(qmldir ${CMAKE_CURRENT_BINARY_DIR}/${target}-qmldir)
-        set(qml_qrc ${CMAKE_CURRENT_BINARY_DIR}/${target}-qml.qrc)
-        dir2code(${qmldir} ${${target}_QML})
-        dir2code(${qml_qrc} ${${target}_QML} ${qmldir})
-        append(${target}_GENERATED ${qml_qrc} ${qmldir})
-        target_add_qrc(${target} ${qml_qrc} ${target}-qml ${${target}_QML})
-        append(${target}_FILES ${${target}_QML} ${qmldir})
-        register_target_files(${target} QML qml)
-    endif()
-    if(${target}_GFX)
-        set(gfx_qrc ${CMAKE_CURRENT_BINARY_DIR}/${target}-gfx.qrc)
-        dir2code(${gfx_qrc} ${${target}_GFX})
-        target_add_qrc(${target} ${gfx_qrc} ${target}-gfx ${${target}_GFX})
-        append(${target}_GENERATED ${gfx_qrc})
-        append(${target}_FILES ${${target}_GFX})
-        register_target_files(${target} GFX gfx)
-    endif()
-    if(${target}_QRC)
-        if(QT5)
-            qt5_add_resources(${target}_QRC_SOURCES ${${target}_QRC})
-        else()
-            qt4_add_resources(${target}_QRC_SOURCES ${${target}_QRC})
-        endif()
-        append(${target}_SOURCES ${${target}_QRC} ${${target}_QRC_SOURCES})
-    endif()
-    if(${target}_UIC)
-        if(QT5)
-            qt5_wrap_ui(${target}_UIC_SOURCES ${${target}_UIC})
-        else()
-            qt4_wrap_ui(${target}_UIC_SOURCES ${${target}_UIC})
-        endif()
-        append(${target}_SOURCES ${${target}_UIC} ${${target}_UIC_SOURCES})
     endif()
     if(WIN32 AND ${target}_WIN32_RC)
         append(${target}_SOURCES ${${target}_WIN32_RC})
@@ -286,6 +160,9 @@ macro(get_source_language src var)
 endmacro()
 
 macro(post_target target)
+
+    mods_post_target(${target})
+
     if(${target}_STRICT)
         foreach(src ${${target}_SOURCES})
             get_source_language(${src} src_lang)
@@ -395,33 +272,6 @@ macro(build_static_library target)
     link(${target})
     set_property(TARGET ${target} PROPERTY FOLDER "libs")
     register_library_dep(${target})
-endmacro()
-
-macro(begin_workspace)
-    set(workspace_cpp ${CMAKE_CURRENT_BINARY_DIR}/workspace.cpp)
-    file(WRITE ${workspace_cpp} "// Dummy translation unit.\n")
-    set_property(GLOBAL PROPERTY workspace_FILES ${workspace_cpp})
-endmacro()
-
-macro(add_to_workspace first_workspace_file) # ...
-    foreach(workspace_file ${first_workspace_file} ${ARGN})
-        set_property(GLOBAL APPEND PROPERTY workspace_FILES
-            ${CMAKE_CURRENT_SOURCE_DIR}/${workspace_file}
-        )
-    endforeach()
-endmacro()
-
-macro(end_workspace)
-    get_property(workspace_FILES GLOBAL PROPERTY workspace_FILES)
-    set_property(SOURCE ${workspace_FILES} PROPERTY HEADER_FILE_ONLY TRUE)
-    folderify_sources(${workspace_FILES})
-    add_library(workspace ${workspace_FILES})
-    set_property(TARGET workspace PROPERTY EXCLUDE_FROM_ALL TRUE)
-    set_property(TARGET workspace PROPERTY FOLDER "[CBUILD]")
-endmacro()
-
-macro(include_here path) # paths
-    include(${CMAKE_CURRENT_LIST_DIR}/${path})
 endmacro()
 
 include_here(deps.cmake)
