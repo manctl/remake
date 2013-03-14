@@ -1,1 +1,0 @@
-register_library_package_dep(cryptopp CryptoPP CRYPTOPP_INCLUDE_DIRS CRYPTOPP_LIBRARY)
