@@ -284,6 +284,7 @@ macro(build_static_library target)
     post_target(${target})
     link(${target})
     set_property(TARGET ${target} PROPERTY FOLDER "libs")
+    register_library_dep(${target})
 endmacro()
 
 macro(build_shared_library target)
@@ -294,6 +295,7 @@ macro(build_shared_library target)
     post_target(${target})
     link(${target})
     set_property(TARGET ${target} PROPERTY FOLDER "dlls")
+    register_library_dep(${target})
 endmacro()
 
 macro(build_module target) # ...
