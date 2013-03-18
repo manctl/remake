@@ -1,27 +1,29 @@
-if(${target}_LUX_UNITS)
-    foreach(unit ${${target}_LUX_UNITS})
+if(${T}_LUX_UNITS)
+    foreach(unit ${${T}_LUX_UNITS})
         get_lux_output(output_h   ${unit}.lux.h)
         get_lux_output(output_cpp ${unit}.lux.cpp)
-        append(${target}_LUX
+        target_append(${T} LUX
             ${unit}.lux.h
             ${unit}.lux.cpp
         )
-        append(${target}_MOC ${output_h})
-        append(${target}_SOURCES
+        target_append(${T} MOC
+            ${output_h}
+        )
+        target_append(${T} SOURCES
             ${output_h}
             ${output_cpp}
         )
-        append(${target}_FILES
+        target_append(${T} FILES
             ${unit}.lux.h
             ${unit}.lux.cpp
         )
     endforeach()
 endif()
-if(${target}_LUX)
-    foreach(lux ${${target}_LUX})
+if(${T}_LUX)
+    foreach(lux ${${T}_LUX})
         get_lux_output(lux_output ${lux})
         lux(${lux} ${lux_output})
-        append(${target}_GENERATED ${lux_output})
-        # message("LUX: ${lux} -> ${lux_output}")
+        target_append(${T} GENERATED ${lux_output})
+        message("LUX: ${lux} -> ${lux_output}")
     endforeach()
 endif()

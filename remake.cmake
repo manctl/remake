@@ -1,9 +1,12 @@
 # Trigger C & C++ compiler detection if necessary.
 project(remake)
 
-macro(append l first) # ...
-    list(APPEND ${l} ${first} ${ARGN})
+macro(include_here path) # paths
+    include(${CMAKE_CURRENT_LIST_DIR}/${path})
 endmacro()
+
+include_here(core/output.cmake)
+include_here(core/variables.cmake)
 
 macro(subdirs firstDir) # ...
     foreach(dir ${firstDir} ${ARGN})
@@ -11,39 +14,14 @@ macro(subdirs firstDir) # ...
     endforeach()
 endmacro()
 
-macro(debug_var var)
-    message("${var}=${${var}}")
-endmacro()
-
-macro(include_here path) # paths
-    include(${CMAKE_CURRENT_LIST_DIR}/${path})
-endmacro()
-
 macro(configure_inline name code)
 # FIXME: Strangely, @VAR@-style expression have already been substituted here.
 # Find out what's going on.
+# See: http://www.cmake.org/pipermail/cmake/2013-March/053929.html
     string(REGEX REPLACE "%{([-A-Za-z_0-9]+)}" "\${\\1}" escaped_code "${code}")
 #    string(CONFIGURE "${escaped_code}" configured_code @ONLY)
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${name}.cmake "${escaped_code}")
     include(${CMAKE_CURRENT_BINARY_DIR}/${name}.cmake)
-endmacro()
-
-macro(set_global var val)
-    set_property(GLOBAL PROPERTY ${var} ${val})
-endmacro()
-
-macro(get_global var)
-    get_property(${var} GLOBAL PROPERTY ${var})
-endmacro()
-
-macro(set_internal var val)
-    set(${var} ${val} CACHE INTERNAL "")
-endmacro()
-
-macro(append_global var first) # second ... last
-    get_global(${var})
-    list(APPEND ${var} ${first} ${ARGN})
-    set_global(${var} ${${var}})
 endmacro()
 
 # Simplify the cross-platform model.
@@ -89,7 +67,7 @@ if(CMAKE_GENERATOR MATCHES "Visual Studio")
             else()
                 set(folder "/${folder}")
             endif()
-            # message("${src} => ${folder}")
+            debug("${src} => ${folder}")
             source_group(${folder} FILES ${src})
         endforeach()
     endmacro()
@@ -114,11 +92,70 @@ macro(add_compile_flags flag0) # ...
     set_property(DIRECTORY APPEND PROPERTY COMPILE_FLAGS ${flag0} ${ARGN})
 endmacro()
 
-macro(target target_)
-    project(${target_})
-    set(HERE_BIN ${CMAKE_CURRENT_BINARY_DIR})
-    set(HERE     ${CMAKE_CURRENT_SOURCE_DIR})
+set_global_and_local(REMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set_global_and_local(HERE_BIN ${CMAKE_CURRENT_BINARY_DIR})
+
+macro(target name)
+    project(${name})
+    set_global_and_local(T    ${name})
+    set_global_and_local(HERE ${CMAKE_CURRENT_SOURCE_DIR})
+    set_global_and_local(HERE_BIN ${CMAKE_CURRENT_BINARY_DIR})
     include_directories(${HERE_BIN} ${HERE})
+endmacro()
+
+macro(get_remake_globals)
+    get_global(T)
+    get_global(HERE)
+    get_global(HERE_BIN)
+endmacro()
+
+macro(remake_properties first) # second ... last
+    append_global(REMAKE_PROPERTIES ${first} ${ARGN})
+    debug("REMAKE_PROPERTIES: ${first} ${ARGN}")
+endmacro()
+
+remake_properties(
+    SOURCES
+    GENERATED
+    UNITS
+    HPP_UNITS
+    WIN32_RC
+    FILES
+    DEPS
+    FILENAME
+    DEFS
+    PLATFORM_DEFS
+    COMPILE_FLAGS
+    STRICT
+    INCLUDES
+    FLAGS
+    LIBS
+    LIBS_OPTIMIZED
+    LIBS_DEBUG
+)
+
+macro(set_remake_properties target)
+    get_global(REMAKE_PROPERTIES)
+    foreach(property ${REMAKE_PROPERTIES})
+        debug("${target}_${property}?")
+        if(DEFINED ${target}_${property})
+            set_global(${target}_${property} ${${target}_${property}})
+            debug("${target}_${property} = ${${target}_${property}}")
+        endif()
+    endforeach()
+endmacro()
+
+macro(get_remake_properties target)
+    get_global(REMAKE_PROPERTIES)
+    foreach(property ${REMAKE_PROPERTIES})
+        get_global(${target}_${property})
+        debug("${target}_${property} => ${${target}_${property}}")
+    endforeach()
+endmacro()
+
+macro(get_remake_variables target)
+    get_remake_globals()
+    get_remake_properties(${target})
 endmacro()
 
 macro(register_target_files target KIND kind)
@@ -148,7 +185,9 @@ include_here(mods.cmake)
 
 macro(pre_target target)
 
+    set_remake_properties(${target})
     mods_pre_target(${target})
+    get_remake_properties(${target})
 
     get_global(PLATFORMS)
     platform_specific_sources(${target} ${PLATFORMS})
@@ -178,7 +217,9 @@ macro(pre_target target)
             append(${target}_SOURCES ${file})
         endforeach()
     endif()
-    folderify_sources(${${target}_SOURCES})
+    if(${target}_SOURCES)
+        folderify_sources(${${target}_SOURCES})
+    endif()
 endmacro()
 
 macro(get_source_language src var)
@@ -193,7 +234,9 @@ endmacro()
 
 macro(post_target target)
 
+    set_remake_properties(${target})
     mods_post_target(${target})
+    get_remake_properties(${target})
 
     foreach(dep ${${target}_DEPS})
         run_dep(${target} ${dep})

@@ -1,5 +1,16 @@
+remake_properties(
+    UIC_UNITS
+    UIC
+    MOC_UNITS
+    MOC
+    JS
+    QML
+    GFX
+    QRC
+)
+
 macro(target_add_qrc target qrc name) # file ...
-    set(qrc_cpp ${CMAKE_CURRENT_BINARY_DIR}/${name}-qrc.cpp)
+    set(qrc_cpp ${HERE_BIN}/${name}-qrc.cpp)
     add_custom_command(OUTPUT ${qrc_cpp}
         COMMAND ${QT_RCC_EXECUTABLE}
         ARGS -name ${name} -o ${qrc_cpp} ${qrc}
@@ -7,6 +18,6 @@ macro(target_add_qrc target qrc name) # file ...
         DEPENDS ${ARGN}
         VERBATIM
     )
-    append(${target}_SOURCES   ${qrc_cpp})
-    append(${target}_GENERATED ${qrc_cpp})
+    target_append(${T} SOURCES   ${qrc_cpp})
+    target_append(${T} GENERATED ${qrc_cpp})
 endmacro()

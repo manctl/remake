@@ -1,6 +1,6 @@
-if(${target}_FX_UNITS)
-    foreach(unit ${${target}_FX_UNITS})
-        append(${target}_SOURCES
+if(${T}_FX_UNITS)
+    foreach(unit ${${T}_FX_UNITS})
+        target_append(${T} SOURCES
             ${unit}-fx.cpp
             ${unit}-fx.h
         )
@@ -13,7 +13,7 @@ if(${target}_FX_UNITS)
         )
         foreach(suffix ${UNIT_SUFFIXES})
             if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${unit}${suffix}")
-                append(${target}_SOURCES ${unit}${suffix})
+                target_append(${T} SOURCES ${unit}${suffix})
             endif()
         endforeach()
     endforeach()
