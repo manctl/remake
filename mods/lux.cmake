@@ -1,4 +1,4 @@
-remake_properties(
+register_target_properties(
     LUX_UNITS
     LUX
 )

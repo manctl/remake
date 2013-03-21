@@ -1,4 +1,4 @@
-remake_properties(
+register_target_properties(
     UIC_UNITS
     UIC
     MOC_UNITS
@@ -9,6 +9,21 @@ remake_properties(
     QRC
 )
 
+macro(register_target_files target KIND kind)
+    set(${kind}_files_h ${CMAKE_CURRENT_BINARY_DIR}/${target}-${kind}-files.h)
+    dir2code(${${kind}_files_h} ${${target}_${KIND}})
+    set(${kind}_files_cpp ${CMAKE_CURRENT_BINARY_DIR}/${target}-${kind}-files.cpp)
+    dir2code(${${kind}_files_cpp} ${${target}_${KIND}})
+    append_target_property(${target} SOURCES
+        ${${kind}_files_h}
+        ${${kind}_files_cpp}
+    )
+    append_target_property(${target} GENERATED
+        ${${kind}_files_h}
+        ${${kind}_files_cpp}
+    )
+endmacro(register_target_files)
+
 macro(target_add_qrc target qrc name) # file ...
     set(qrc_cpp ${HERE_BIN}/${name}-qrc.cpp)
     add_custom_command(OUTPUT ${qrc_cpp}
@@ -18,6 +33,6 @@ macro(target_add_qrc target qrc name) # file ...
         DEPENDS ${ARGN}
         VERBATIM
     )
-    target_append(${T} SOURCES   ${qrc_cpp})
-    target_append(${T} GENERATED ${qrc_cpp})
+    append_target_property(${target} SOURCES   ${qrc_cpp})
+    append_target_property(${target} GENERATED ${qrc_cpp})
 endmacro()

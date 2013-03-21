@@ -1,6 +1,6 @@
-include_here(core/deps.cmake)
-
-file(GLOB_RECURSE deps RELATIVE ${CMAKE_CURRENT_LIST_DIR} "${CMAKE_CURRENT_LIST_DIR}/deps/*.cmake")
+file(GLOB_RECURSE deps RELATIVE ${CMAKE_CURRENT_LIST_DIR}
+    "${CMAKE_CURRENT_LIST_DIR}/deps/*.cmake"
+)
 
 foreach(dep ${deps})
     include_here(${dep})

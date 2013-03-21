@@ -7,6 +7,9 @@ endmacro()
 
 include_here(core/output.cmake)
 include_here(core/variables.cmake)
+include_here(core/properties.cmake)
+include_here(core/mods.cmake)
+include_here(core/deps.cmake)
 
 macro(subdirs firstDir) # ...
     foreach(dir ${firstDir} ${ARGN})
@@ -23,31 +26,6 @@ macro(configure_inline name code)
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/${name}.cmake "${escaped_code}")
     include(${CMAKE_CURRENT_BINARY_DIR}/${name}.cmake)
 endmacro()
-
-# Simplify the cross-platform model.
-if(WIN32)
-    set_internal(WINDOWS TRUE)
-    append_global(PLATFORM_DEFS "SYS_WINDOWS")
-elseif(UNIX)
-    set_internal(UNIX TRUE)
-    append_global(PLATFORM_DEFS "SYS_UNIX")
-    if(APPLE)
-        set_internal(MACOSX TRUE)
-        append_global(PLATFORM_DEFS "SYS_MACOSX")
-    else()
-        set_internal(LINUX TRUE)
-        append_global(PLATFORM_DEFS "SYS_LINUX")
-    endif()
-endif()
-
-set_global(PLATFORMS "WINDOWS;MACOSX;LINUX;UNIX")
-
-# Simplify the target cpu word length problem.
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-    set_internal(M64 ON)
-else()
-    set_internal(M32 ON)
-endif()
 
 # Beautify IDE projects.
 set_global(USE_FOLDERS ON)
@@ -76,14 +54,6 @@ else()
     endmacro()
 endif()
 
-if(APPLE OR CMAKE_COMPILER_IS_GNUC)
-    set(REMAKE_STRICT_C_FLAGS   "-Wall -Wextra -Werror -ansi -std=c99   -pedantic -Wno-variadic-macros -Wno-long-long -Wno-unknown-pragmas")
-endif()
-
-if(APPLE OR CMAKE_COMPILER_IS_GNUCXX)
-    set(REMAKE_STRICT_CXX_FLAGS "-Wall -Wextra -Werror -ansi -std=c++98 -pedantic -Wno-variadic-macros -Wno-long-long -Wno-unknown-pragmas")
-endif()
-
 macro(dirname var path)
     get_filename_component(${var} ${path} PATH)
 endmacro()
@@ -103,30 +73,21 @@ macro(target name)
     include_directories(${HERE_BIN} ${HERE})
 endmacro()
 
-macro(get_remake_globals)
+macro(get_target_globals)
     get_global(T)
     get_global(HERE)
     get_global(HERE_BIN)
 endmacro()
 
-macro(remake_properties first) # second ... last
-    append_global(REMAKE_PROPERTIES ${first} ${ARGN})
-    debug("REMAKE_PROPERTIES: ${first} ${ARGN}")
-endmacro()
-
-remake_properties(
+register_target_properties(
     SOURCES
     GENERATED
-    UNITS
-    HPP_UNITS
     WIN32_RC
     FILES
     DEPS
     FILENAME
     DEFS
-    PLATFORM_DEFS
     COMPILE_FLAGS
-    STRICT
     INCLUDES
     FLAGS
     LIBS
@@ -134,81 +95,14 @@ remake_properties(
     LIBS_DEBUG
 )
 
-macro(set_remake_properties target)
-    get_global(REMAKE_PROPERTIES)
-    foreach(property ${REMAKE_PROPERTIES})
-        debug("${target}_${property}?")
-        if(DEFINED ${target}_${property})
-            set_global(${target}_${property} ${${target}_${property}})
-            debug("${target}_${property} = ${${target}_${property}}")
-        endif()
-    endforeach()
-endmacro()
-
-macro(get_remake_properties target)
-    get_global(REMAKE_PROPERTIES)
-    foreach(property ${REMAKE_PROPERTIES})
-        get_global(${target}_${property})
-        debug("${target}_${property} => ${${target}_${property}}")
-    endforeach()
-endmacro()
-
-macro(get_remake_variables target)
-    get_remake_globals()
-    get_remake_properties(${target})
-endmacro()
-
-macro(register_target_files target KIND kind)
-    set(${kind}_files_h ${CMAKE_CURRENT_BINARY_DIR}/${target}-${kind}-files.h)
-    dir2code(${${kind}_files_h} ${${target}_${KIND}})
-    set(${kind}_files_cpp ${CMAKE_CURRENT_BINARY_DIR}/${target}-${kind}-files.cpp)
-    dir2code(${${kind}_files_cpp} ${${target}_${KIND}})
-    append(${target}_SOURCES
-        ${${kind}_files_h}
-        ${${kind}_files_cpp}
-    )
-    append(${target}_GENERATED
-        ${${kind}_files_h}
-        ${${kind}_files_cpp}
-    )
-endmacro(register_target_files)
-
-macro(platform_specific_sources target platform0) # ...
-    foreach(platform ${platform0} ${ARGN})
-        if(${platform} AND ${target}_${platform}_SOURCES)
-            append(${target}_SOURCES ${${target}_${platform}_SOURCES})
-        endif()
-    endforeach()
-endmacro()
-
 include_here(mods.cmake)
 
 macro(pre_target target)
 
-    set_remake_properties(${target})
+    load_target_properties(${target})
     mods_pre_target(${target})
-    get_remake_properties(${target})
+    get_target_properties(${target})
 
-    get_global(PLATFORMS)
-    platform_specific_sources(${target} ${PLATFORMS})
-
-    if(${target}_UNITS)
-        foreach(unit ${${target}_UNITS})
-            append(${target}_SOURCES
-                ${unit}.cpp
-                ${unit}.h
-            )
-        endforeach()
-    endif()
-    if(${target}_HPP_UNITS)
-        foreach(unit ${${target}_HPP_UNITS})
-            append(${target}_SOURCES
-                ${unit}.cpp
-                ${unit}.h
-                ${unit}.hpp
-            )
-        endforeach()
-    endif()
     if(WIN32 AND ${target}_WIN32_RC)
         append(${target}_SOURCES ${${target}_WIN32_RC})
     endif()
@@ -234,9 +128,9 @@ endmacro()
 
 macro(post_target target)
 
-    set_remake_properties(${target})
+    load_target_properties(${target})
     mods_post_target(${target})
-    get_remake_properties(${target})
+    get_target_properties(${target})
 
     foreach(dep ${${target}_DEPS})
         run_dep(${target} ${dep})
@@ -248,22 +142,8 @@ macro(post_target target)
     if(${target}_DEFS)
         set_property(TARGET ${target} APPEND PROPERTY COMPILE_DEFINITIONS ${${target}_DEFS})
     endif()
-    if(${target}_PLATFORM_DEFS)
-        get_global(${PLATFORM_DEFS})
-        set_property(TARGET ${target} APPEND PROPERTY COMPILE_DEFINITIONS ${PLATFORM_DEFS})
-    endif()
     if(${target}_COMPILE_FLAGS)
         set_property(TARGET ${target} APPEND PROPERTY COMPILE_FLAGS ${${target}_COMPILE_FLAGS})
-    endif()
-    if(${target}_STRICT)
-        foreach(src ${${target}_SOURCES})
-            get_source_language(${src} src_lang)
-            if(src_lang STREQUAL "C" AND DEFINED REMAKE_STRICT_C_FLAGS)
-                set_property(SOURCE ${src} APPEND PROPERTY COMPILE_FLAGS ${REMAKE_STRICT_C_FLAGS})
-            elseif(src_lang STREQUAL "CXX" AND DEFINED REMAKE_STRICT_CXX_FLAGS)
-                set_property(SOURCE ${src} APPEND PROPERTY COMPILE_FLAGS ${REMAKE_STRICT_CXX_FLAGS})
-            endif()
-        endforeach()
     endif()
     if(${target}_INCLUDES)
         foreach(path ${${target}_INCLUDES})

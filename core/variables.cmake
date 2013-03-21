@@ -14,7 +14,7 @@ function(set_global var val) # ...
     debug("GLOBAL: ${var} = ${val} ${ARGN}")
 endfunction()
 
-function(append_global var first) # second ... last
+function(append_global var first) # ...
     get_global(${var})
     list(APPEND ${var} ${first} ${ARGN})
     debug("list(APPEND ${var} ${first} ${ARGN})")
@@ -24,6 +24,11 @@ endfunction()
 macro(set_global_and_local var val)
     set_global(${var} ${val})
     set(${var} ${val})
+endmacro()
+
+macro(append_global_and_local var val) # ...
+    append_global(${var} ${val} ${ARGN})
+    append(${var} ${val} ${ARGN})
 endmacro()
 
 function(set_internal var val)

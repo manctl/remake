@@ -1,3 +1,4 @@
 register_target_properties(
-    FX_UNITS
+    UNITS
+    HPP_UNITS
 )
