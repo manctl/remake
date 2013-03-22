@@ -1,5 +1,10 @@
 # Trigger C & C++ compiler detection if necessary.
-project(remake)
+if(NOT CMAKE_CXX_COMPILER)
+    # This will confuse QtCreator's current (2.6.1) .cbp detection,
+    # and override the project name to 'remake', so do it _only_ when
+    # no previous project() command has been previously called.
+    project(remake)
+endif()
 
 macro(include_here path) # paths
     include(${CMAKE_CURRENT_LIST_DIR}/${path})
