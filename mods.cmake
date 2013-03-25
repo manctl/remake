@@ -8,8 +8,6 @@ macro(mods_pre_target target)
     # Order matters. Current dependencies: none.
     mod_pre_target(${target} platform)
     mod_pre_target(${target} units)
-    mod_pre_target(${target} fx)
-    mod_pre_target(${target} lux)
     mod_pre_target(${target} qt)
 endmacro()
 
