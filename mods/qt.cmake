@@ -26,6 +26,9 @@ endmacro(register_target_files)
 
 macro(target_add_qrc target qrc name) # file ...
     set(qrc_cpp ${HERE_BIN}/${name}-qrc.cpp)
+    if(QT5)
+        get_target_property(QT_RCC_EXECUTABLE Qt5::rcc LOCATION)
+    endif()
     add_custom_command(OUTPUT ${qrc_cpp}
         COMMAND ${QT_RCC_EXECUTABLE}
         ARGS -name ${name} -o ${qrc_cpp} ${qrc}
