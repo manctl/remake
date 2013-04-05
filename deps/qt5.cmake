@@ -16,7 +16,9 @@ endmacro()
 
 register_dep(qt5-main-library "
 find_package(Qt5Core REQUIRED)
-target_link_libraries(@TARGET@ Qt5::WinMain)
+if(WIN32)
+    target_link_libraries(@TARGET@ Qt5::WinMain)
+endif()
 "
 )
 
