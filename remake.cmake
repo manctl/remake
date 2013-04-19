@@ -70,11 +70,15 @@ endmacro()
 set_global_and_local(REMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set_global_and_local(HERE_BIN ${CMAKE_CURRENT_BINARY_DIR})
 
-macro(target name)
-    project(${name})
+macro(set_target_vars name)
     set_global_and_local(T    ${name})
     set_global_and_local(HERE ${CMAKE_CURRENT_SOURCE_DIR})
     set_global_and_local(HERE_BIN ${CMAKE_CURRENT_BINARY_DIR})
+endmacro()
+
+macro(target name)
+    project(${name})
+    set_target_vars(${name})
     include_directories(${HERE_BIN} ${HERE})
 endmacro()
 
@@ -103,6 +107,8 @@ register_target_properties(
 include_here(mods.cmake)
 
 macro(pre_target target)
+
+    set_target_vars(${target})
 
     load_target_properties(${target})
     mods_pre_target(${target})
