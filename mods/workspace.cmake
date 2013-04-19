@@ -1,12 +1,11 @@
 function(begin_workspace)
-    get_target_globals()
-    set(workspace_cpp ${HERE_BIN}/workspace.cpp)
+    set(workspace_cpp ${CMAKE_CURRENT_BINARY_DIR}/workspace.cpp)
     file(WRITE ${workspace_cpp} "// Dummy translation unit.\n")
     set_global(workspace_FILES ${workspace_cpp})
 endfunction()
 
 function(add_to_workspace first) # ...
-    foreach(workspace_file ${first_workspace_file} ${ARGN})
+    foreach(workspace_file ${first} ${ARGN})
         append_global(workspace_FILES ${CMAKE_CURRENT_SOURCE_DIR}/${workspace_file})
     endforeach()
 endfunction()
