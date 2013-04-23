@@ -6,5 +6,5 @@ register_target_properties(
 macro(get_lux_output var input)
     string(REPLACE ".lux" "" output ${input})
     set(${var} "${HERE_BIN}/${output}")
-    message("${input} => ${output} (${${var}})")
+    debug("${input} => ${output} (${${var}})")
 endmacro()
