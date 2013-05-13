@@ -1,8 +1,9 @@
 if(${T}_PLATFORM_DEFS)
-    if(DEFINED PLATFORM_DEFS)
-		get_global(${PLATFORM_DEFS})
-		set_property(TARGET ${T} APPEND PROPERTY COMPILE_DEFINITIONS
-			${PLATFORM_DEFS}
-		)
-	endif()
+    get_global(PLATFORM_DEFS)
+    if(NOT DEFINED PLATFORM_DEFS)
+        message(FATAL_ERROR "Internal error: No platform definitions.")
+    endif()
+    set_property(TARGET ${T} APPEND PROPERTY COMPILE_DEFINITIONS
+        ${PLATFORM_DEFS}
+    )
 endif()
