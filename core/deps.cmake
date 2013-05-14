@@ -19,7 +19,7 @@ endfunction()
 function(register_library_package_dep name package includes_var libs_var)
     register_dep(${name} "
 find_package(${package} REQUIRED)
-set_property(TARGET @TARGET@ APPEND PROPERTY INCLUDE_DIRECTORIES %{${include_var}})
+set_property(TARGET @TARGET@ APPEND PROPERTY INCLUDE_DIRECTORIES %{${includes_var}})
 target_link_libraries(@TARGET@ %{${libs_var}})
 ")
 endfunction()
