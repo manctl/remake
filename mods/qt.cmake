@@ -17,21 +17,21 @@ macro(qt_moc var src0) # src1 ...
     endif()
 endmacro()
 
-macro(register_target_files target KIND kind)
-    set(${kind}_files_h ${CMAKE_CURRENT_BINARY_DIR}/${target}-${kind}-files.h)
-    dir2code(${${kind}_files_h} ${${target}_${KIND}})
-    set(${kind}_files_cpp ${CMAKE_CURRENT_BINARY_DIR}/${target}-${kind}-files.cpp)
-    dir2code(${${kind}_files_cpp} ${${target}_${KIND}})
-    set(moc_cpp)
-    qt_moc(moc_cpp ${${kind}_files_h})
+macro(register_target_resources target KIND kind)
+    set(${kind}_resources_h ${CMAKE_CURRENT_BINARY_DIR}/${target}-${kind}-resources.h)
+    dir2code(${${kind}_resources_h} ${${target}_${KIND}})
+    set(${kind}_resources_cpp ${CMAKE_CURRENT_BINARY_DIR}/${target}-${kind}-resources.cpp)
+    dir2code(${${kind}_resources_cpp} ${${target}_${KIND}})
+    set(moc_resources_cpp)
+    qt_moc(moc_resources_cpp ${${kind}_resources_h})
     set(sources
-        ${${kind}_files_h}
-        ${${kind}_files_cpp}
-        ${moc_cpp}
+        ${${kind}_resources_h}
+        ${${kind}_resources_cpp}
+        ${moc_resources_cpp}
     )
     append_target_property(${target} SOURCES   ${sources})
     append_target_property(${target} GENERATED ${sources})
-endmacro(register_target_files)
+endmacro(register_target_resources)
 
 macro(target_add_qrc target qrc name) # file ...
     set(qrc_cpp ${HERE_BIN}/${name}-qrc.cpp)
