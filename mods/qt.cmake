@@ -22,11 +22,12 @@ macro(register_target_files target KIND kind)
     dir2code(${${kind}_files_h} ${${target}_${KIND}})
     set(${kind}_files_cpp ${CMAKE_CURRENT_BINARY_DIR}/${target}-${kind}-files.cpp)
     dir2code(${${kind}_files_cpp} ${${target}_${KIND}})
-    qt_moc(moc_cpp ${${kind}_files_cpp})
+    set(moc_cpp)
+    qt_moc(moc_cpp ${${kind}_files_h})
     set(sources
         ${${kind}_files_h}
         ${${kind}_files_cpp}
-        ${${moc_cpp}}
+        ${moc_cpp}
     )
     append_target_property(${target} SOURCES   ${sources})
     append_target_property(${target} GENERATED ${sources})
