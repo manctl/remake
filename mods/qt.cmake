@@ -9,19 +9,27 @@ register_target_properties(
     QRC
 )
 
+macro(qt_moc var src0) # src1 ...
+    if(QT5)
+        qt5_wrap_cpp(${var} ${src0} ${ARGN})
+    else()
+        qt4_wrap_cpp(${var} ${src0} ${ARGN})
+    endif()
+endmacro()
+
 macro(register_target_files target KIND kind)
     set(${kind}_files_h ${CMAKE_CURRENT_BINARY_DIR}/${target}-${kind}-files.h)
     dir2code(${${kind}_files_h} ${${target}_${KIND}})
     set(${kind}_files_cpp ${CMAKE_CURRENT_BINARY_DIR}/${target}-${kind}-files.cpp)
     dir2code(${${kind}_files_cpp} ${${target}_${KIND}})
-    append_target_property(${target} SOURCES
+    qt_moc(moc_cpp ${${kind}_files_cpp})
+    set(sources
         ${${kind}_files_h}
         ${${kind}_files_cpp}
+        ${${moc_cpp}}
     )
-    append_target_property(${target} GENERATED
-        ${${kind}_files_h}
-        ${${kind}_files_cpp}
-    )
+    append_target_property(${target} SOURCES   ${sources})
+    append_target_property(${target} GENERATED ${sources})
 endmacro(register_target_files)
 
 macro(target_add_qrc target qrc name) # file ...
